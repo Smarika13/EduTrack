@@ -41,6 +41,7 @@ class Subject(Base):
     faculty=Column(String)
     semester=Column(Integer)
     teacher_id = Column(Integer,ForeignKey("teacher.id"))
+    teacher = relationship("Teacher", back_populates="subject")
     attendance=relationship("Attendance" , back_populates="subject")
     assignment=relationship("Assignment" , back_populates="subject")
     test=relationship("Test" , back_populates="subject")
@@ -104,6 +105,13 @@ class Score(Base):
     student_id = Column(Integer,ForeignKey("student.id"))
     student=relationship("Student" , back_populates="score")
     test=relationship("Test" , back_populates="score")
+
+class Admin(Base):
+    __tablename__ = "admin"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    email = Column(String, unique=True)
+    hashed_password = Column(String)
 
 
 
