@@ -34,8 +34,6 @@ def mark_attendance(attendance: AttendanceSchema, current_user_data: tuple = Dep
     if existing_attendance:
         raise HTTPException(status_code=400, detail="Attendance already marked for this student on this date")
 
-    if attendance.status not in ["present", "absent"]:
-        raise HTTPException(status_code=400, detail="Status must be either 'present' or 'absent'")
     
     db_attendance = models.Attendance(
         date=attendance.date,

@@ -1,9 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-class SubmissionSchema(BaseModel):
-    assignment_id: int
-    file_path: str
 
 class SubmissionResponse(BaseModel):
     id: int

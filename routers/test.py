@@ -20,9 +20,6 @@ def create_test(test: TestSchema, current_user_data: tuple = Depends(get_current
     if subject.teacher_id != current_user.id:
         raise HTTPException(status_code=403, detail="You can only create tests for your own subjects")
     
-    if test.pass_mark > test.full_mark:
-        raise HTTPException(status_code=400, detail="Pass mark cannot be greater than full mark")
-    
     db_test = models.Test(
         name=test.name,
         full_mark=test.full_mark,

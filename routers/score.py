@@ -35,8 +35,6 @@ def enter_score(score: ScoreSchema, current_user_data: tuple = Depends(get_curre
     if score.marks > test.full_mark:
         raise HTTPException(status_code=400, detail=f"Marks cannot exceed full mark of {test.full_mark}")
     
-    if score.marks < 0:
-        raise HTTPException(status_code=400, detail="Marks cannot be negative")
 
     status = "pass" if score.marks >= test.pass_mark else "fail"
     
