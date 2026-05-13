@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from dependencies import get_db
 from utils import get_current_user
 from schemas.submission import SubmissionResponse
+from fastapi.responses import FileResponse
 from datetime import datetime
 import models
 import os
@@ -118,3 +119,35 @@ def delete_submission(
     db.delete(db_submission)
     db.commit()
     return {"message": "Submission deleted successfully"}
+
+@router.get("/submission/assignment/{assignment_id}/download")
+def download_submission(
+    assignment_id: int,
+    current_user_data: tuple = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    current_user, role = current_user_data
+    
+    if role == "student":
+        db_submission = db.query(models.Submission).filter(
+            models.Submission.assignment_id == assignment_id,
+            models.Submission.student_id == current_user.id
+        ).first()
+    elif role == "teacher":
+        db_submission = db.query(models.Submission).filter(
+            models.Submission.assignment_id == assignment_id
+        ).first()
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    if not db_submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    if not os.path.exists(db_submission.file_path):
+        raise HTTPException(status_code=404, detail="File not found on server")
+
+    return FileResponse(
+        path=db_submission.file_path,
+        media_type="application/pdf",
+        filename=f"submission_{assignment_id}.pdf"
+    )
