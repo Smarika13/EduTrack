@@ -3,9 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import student,teacher,assignment,submission,test,score,subject,attendance,auth
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
+from slowapi import  _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from limiter import limiter
 
 
 app = FastAPI()
+
+
+app.state.limiter= limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,

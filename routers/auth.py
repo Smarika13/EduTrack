@@ -5,11 +5,14 @@ import models
 from schemas.student import StudentSchema,StudentResponse
 from schemas.auth import LoginSchema, TokenResponse
 from utils import hash_password,verify_password,create_access_token
+from limiter import limiter
+from fastapi import Request
 
 router = APIRouter()
 
 @router.post("/register", response_model=StudentResponse)
-def register(student: StudentSchema, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register(request: Request, student: StudentSchema, db: Session = Depends(get_db)):
     existing_email = db.query(models.Student).filter(models.Student.email == student.email).first()
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -39,7 +42,8 @@ def register(student: StudentSchema, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(credentials: LoginSchema, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, credentials: LoginSchema, db: Session = Depends(get_db)):
     # Check Student
     user = db.query(models.Student).filter(models.Student.email == credentials.email).first()
     if user and verify_password(credentials.password, user.hashed_password):
