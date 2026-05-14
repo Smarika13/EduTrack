@@ -4,12 +4,32 @@ from routers import student,teacher,assignment,submission,test,score,subject,att
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
 from slowapi import  _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from limiter import limiter
+from contextlib import asynccontextmanager
+import os
+from dotenv import load_dotenv
+from logger import logger
+
+load_dotenv()
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    required_vars = [
+        "DATABASE_URL",
+        "SECRET_KEY", 
+        "ALGORITHM",
+        "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "REFRESH_TOKEN_EXPIRE_DAYS"
+    ]
+    for var in required_vars:
+        if not os.getenv(var):
+            raise RuntimeError(f"Missing required environment variable: {var}")
+    logger.info("All environment variables loaded successfully")
+    yield
+ 
+app = FastAPI(lifespan=lifespan)
 
 
 app.state.limiter= limiter
