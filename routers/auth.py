@@ -7,6 +7,7 @@ from schemas.auth import LoginSchema, TokenResponse
 from utils import hash_password,verify_password,create_access_token
 from limiter import limiter
 from fastapi import Request
+from logger import logger
 
 router = APIRouter()
 
@@ -15,10 +16,14 @@ router = APIRouter()
 def register(request: Request, student: StudentSchema, db: Session = Depends(get_db)):
     existing_email = db.query(models.Student).filter(models.Student.email == student.email).first()
     if existing_email:
+        logger.warning(f"Email already registered: {student.email}")
         raise HTTPException(status_code=400, detail="Email already registered")
+     
+    
     
     existing_roll = db.query(models.Student).filter(models.Student.roll_no == student.roll_no).first()
     if existing_roll:
+        logger.warning(f"Roll number already registered {student.email}")
         raise HTTPException(status_code=400, detail="Roll number already registered")
 
     year = (student.semester + 1) // 2
@@ -38,6 +43,7 @@ def register(request: Request, student: StudentSchema, db: Session = Depends(get
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    logger.info(f"You are registered {student.email}")
     return db_user
 
 
@@ -48,18 +54,22 @@ def login(request: Request, credentials: LoginSchema, db: Session = Depends(get_
     user = db.query(models.Student).filter(models.Student.email == credentials.email).first()
     if user and verify_password(credentials.password, user.hashed_password):
         token = create_access_token(data={"sub": user.email})
+        logger.info(f"You are logged in as {user.email}")
         return {"access_token": token, "token_type": "bearer"}
 
     # Check Teacher
     user = db.query(models.Teacher).filter(models.Teacher.email == credentials.email).first()
     if user and verify_password(credentials.password, user.hashed_password):
         token = create_access_token(data={"sub": user.email})
+        logger.info(f"You are logged in  as {user.email}")
         return {"access_token": token, "token_type": "bearer"}
 
     # Check Admin
     user = db.query(models.Admin).filter(models.Admin.email == credentials.email).first()
     if user and verify_password(credentials.password, user.hashed_password):
         token = create_access_token(data={"sub": user.email})
+        logger.info(f"You are logged in as {user.email}")
         return {"access_token": token, "token_type": "bearer"}
-
+    
+    logger.warning(f"Invalid credentials {credentials.email}")
     raise HTTPException(status_code=401, detail="Invalid credentials")
