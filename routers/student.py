@@ -6,59 +6,58 @@ from schemas.student import StudentResponse
 from schemas.attendance import AttendanceResponse
 from schemas.score import ScoreResponse
 from schemas.submission import SubmissionResponse
-from typing import List
+from typing import List, Dict, Any
 import models
+from logger import logger
 
 router = APIRouter()
 
-@router.get("/student/me", response_model=StudentResponse)
-def get_my_profile(current_user_data: tuple = Depends(get_current_user)):
+def require_student(current_user_data: tuple = Depends(get_current_user)):
     current_user, role = current_user_data
     if role != "student":
+        logger.warning(f"Unauthorized access by {current_user.email}")
         raise HTTPException(status_code=403, detail="Not authorized")
     return current_user
 
-@router.get("/student/me/attendance", response_model=List[AttendanceResponse])
+def paginate(query, page: int, limit: int) -> Dict[str, Any]:
+    total = query.count()
+    data = query.offset((page - 1) * limit).limit(limit).all()
+    return {"total": total, "page": page, "limit": limit, "data": data}
+
+@router.get("/student/me", response_model=StudentResponse)
+def get_my_profile(current_user = Depends(require_student)):
+    logger.info(f"Student {current_user.email} fetched their profile")
+    return current_user
+
+@router.get("/student/me/attendance")
 def get_my_attendance(
-    current_user_data: tuple = Depends(get_current_user),
+    current_user = Depends(require_student),
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100)
 ):
-    current_user, role = current_user_data
-    if role != "student":
-        raise HTTPException(status_code=403, detail="Not authorized")
-    offset = (page - 1) * limit
-    return db.query(models.Attendance).filter(
-        models.Attendance.student_id == current_user.id
-    ).offset(offset).limit(limit).all()
+    logger.info(f"Student {current_user.email} fetched attendance")
+    query = db.query(models.Attendance).filter(models.Attendance.student_id == current_user.id)
+    return paginate(query, page, limit)
 
-@router.get("/student/me/scores", response_model=List[ScoreResponse])
+@router.get("/student/me/scores")
 def get_my_scores(
-    current_user_data: tuple = Depends(get_current_user),
+    current_user = Depends(require_student),
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100)
 ):
-    current_user, role = current_user_data
-    if role != "student":
-        raise HTTPException(status_code=403, detail="Not authorized")
-    offset = (page - 1) * limit
-    return db.query(models.Score).filter(
-        models.Score.student_id == current_user.id
-    ).offset(offset).limit(limit).all()
+    logger.info(f"Student {current_user.email} fetched scores")
+    query = db.query(models.Score).filter(models.Score.student_id == current_user.id)
+    return paginate(query, page, limit)
 
-@router.get("/student/me/submissions", response_model=List[SubmissionResponse])
+@router.get("/student/me/submissions")
 def get_my_submissions(
-    current_user_data: tuple = Depends(get_current_user),
+    current_user = Depends(require_student),
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100)
 ):
-    current_user, role = current_user_data
-    if role != "student":
-        raise HTTPException(status_code=403, detail="Not authorized")
-    offset = (page - 1) * limit
-    return db.query(models.Submission).filter(
-        models.Submission.student_id == current_user.id
-    ).offset(offset).limit(limit).all()
+    logger.info(f"Student {current_user.email} fetched submissions")
+    query = db.query(models.Submission).filter(models.Submission.student_id == current_user.id)
+    return paginate(query, page, limit)
