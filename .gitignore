@@ -5,3 +5,4 @@ __pycache__/
 *.db
 alembic/versions/
 uploads/
+edutrack.log
