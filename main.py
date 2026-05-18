@@ -1,6 +1,6 @@
 from fastapi import FastAPI,Request
 from fastapi.middleware.cors import CORSMiddleware
-from routers import student,teacher,assignment,submission,test,score,subject,attendance,auth
+from routers.v1 import api
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
 from slowapi import  _rate_limit_exceeded_handler
@@ -64,14 +64,5 @@ async def generic_exception_handler(request: Request, exc: Exception):
     )
 
 
-app.include_router(student.router)
-app.include_router(teacher.router)
-app.include_router(subject.router)
-app.include_router(submission.router)
-app.include_router(attendance.router)
-app.include_router(test.router)
-app.include_router(score.router)
-app.include_router(assignment.router)
-app.include_router(auth.router)
-
+app.include_router(api)
 
