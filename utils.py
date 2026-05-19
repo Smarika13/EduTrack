@@ -64,5 +64,4 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(http_be
     user = db.query(models.Admin).filter(models.Admin.email == email).first()
     if user:
         return user, "admin"
-
     raise credentials_exception
