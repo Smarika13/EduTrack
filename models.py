@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, ForeignKey, Column, DateTime
+from sqlalchemy import String, Integer, ForeignKey, Column, DateTime,Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -113,3 +113,12 @@ class Admin(Base):
     name = Column(String)
     email = Column(String, unique=True)
     hashed_password = Column(String)
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_token"
+    id=Column(Integer,primary_key=True)
+    token=Column(String,unique=True,nullable=False)
+    user_id=Column(Integer)
+    role=Column(String)
+    expires_at=Column(DateTime)
+    is_revoked=Column(Boolean,default=False)
