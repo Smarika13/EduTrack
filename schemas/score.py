@@ -1,5 +1,6 @@
 from pydantic import BaseModel, field_validator
 
+
 class ScoreSchema(BaseModel):
     marks: int
     student_id: int
@@ -10,6 +11,7 @@ class ScoreSchema(BaseModel):
         if v < 0:
             raise ValueError('Marks cannot be negative')
         return v
+
 
 class ScoreResponse(BaseModel):
     id: int

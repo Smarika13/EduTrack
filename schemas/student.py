@@ -1,6 +1,7 @@
-from pydantic import field_validator,BaseModel
+from pydantic import field_validator, BaseModel
 from datetime import date
 from schemas.base import BaseUserSchema
+
 
 class StudentSchema(BaseUserSchema):
     roll_no: str
@@ -18,6 +19,7 @@ class StudentSchema(BaseUserSchema):
         if len(v.strip()) == 0:
             raise ValueError('Roll number cannot be empty')
         return v.strip()
+
 
 class StudentResponse(BaseModel):
     id: int

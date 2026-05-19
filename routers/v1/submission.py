@@ -13,6 +13,7 @@ router = APIRouter()
 
 UPLOAD_DIR = "uploads"
 
+
 @router.post("/submission", response_model=SubmissionResponse)
 def create_submission(
     assignment_id: int = Form(...),
@@ -120,6 +121,7 @@ def delete_submission(
     db.commit()
     return {"message": "Submission deleted successfully"}
 
+
 @router.get("/submission/assignment/{assignment_id}/download")
 def download_submission(
     assignment_id: int,
@@ -127,7 +129,7 @@ def download_submission(
     db: Session = Depends(get_db)
 ):
     current_user, role = current_user_data
-    
+
     if role == "student":
         db_submission = db.query(models.Submission).filter(
             models.Submission.assignment_id == assignment_id,

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from routers.v1 import assignment, attendance, auth, score, student, subject, submission, teacher,test
+from routers.v1 import assignment, attendance, auth, score, student, subject, submission, teacher, test
 api = APIRouter(prefix="/api/v1")
 
 api.include_router(student.router, tags=["Student"])
