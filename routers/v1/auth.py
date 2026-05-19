@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from dependencies import get_db
 import models
 from schemas.student import StudentSchema, StudentResponse
-from schemas.auth import LoginSchema, TokenResponse,RefreshTokenRequest
-from utils import hash_password, verify_password, create_access_token,create_refresh_token,REFRESH_TOKEN_EXPIRE_DAYS,SECRET_KEY,ALGORITHM
+from schemas.auth import LoginSchema, TokenResponse, RefreshTokenRequest
+from utils import hash_password, verify_password, create_access_token, create_refresh_token, REFRESH_TOKEN_EXPIRE_DAYS, SECRET_KEY, ALGORITHM
 from limiter import limiter
 from fastapi import Request
 from logger import logger
@@ -57,14 +57,14 @@ def login(request: Request, credentials: LoginSchema, db: Session = Depends(get_
         token = create_access_token(data={"sub": user.email})
         refresh = create_refresh_token(data={"sub": user.email})
         db_refresh = models.RefreshToken(
-                     token=refresh,
-                     user_id=user.id,
-                     role="student",
-                     expires_at= datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
+            token=refresh,
+            user_id=user.id,
+            role="student",
+            expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
         db.add(db_refresh)
         db.commit()
         logger.info(f"You are logged in as {user.email}")
-        return {"access_token": token, "token_type": "bearer","refresh_token":refresh}
+        return {"access_token": token, "token_type": "bearer", "refresh_token": refresh}
 
     # Check Teacher
     user = db.query(models.Teacher).filter(models.Teacher.email == credentials.email).first()
@@ -72,14 +72,14 @@ def login(request: Request, credentials: LoginSchema, db: Session = Depends(get_
         token = create_access_token(data={"sub": user.email})
         refresh = create_refresh_token(data={"sub": user.email})
         db_refresh = models.RefreshToken(
-                     token=refresh,
-                     user_id=user.id,
-                     role="teacher",
-                     expires_at= datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
+            token=refresh,
+            user_id=user.id,
+            role="teacher",
+            expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
         db.add(db_refresh)
         db.commit()
         logger.info(f"You are logged in as {user.email}")
-        return {"access_token": token, "token_type": "bearer","refresh_token":refresh}
+        return {"access_token": token, "token_type": "bearer", "refresh_token": refresh}
 
     # Check Admin
     user = db.query(models.Admin).filter(models.Admin.email == credentials.email).first()
@@ -87,22 +87,22 @@ def login(request: Request, credentials: LoginSchema, db: Session = Depends(get_
         token = create_access_token(data={"sub": user.email})
         refresh = create_refresh_token(data={"sub": user.email})
         db_refresh = models.RefreshToken(
-                     token=refresh,
-                     user_id=user.id,
-                     role="admin",
-                     expires_at= datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
+            token=refresh,
+            user_id=user.id,
+            role="admin",
+            expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
         db.add(db_refresh)
         db.commit()
         logger.info(f"You are logged in as {user.email}")
-        return {"access_token": token, "token_type": "bearer","refresh_token":refresh}
-        
+        return {"access_token": token, "token_type": "bearer", "refresh_token": refresh}
 
     logger.warning(f"Invalid credentials {credentials.email}")
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
+
 @router.post("/refresh")
-def refresh_token(request_body: RefreshTokenRequest, db:Session=Depends(get_db)):
-    refresh=db.query(models.RefreshToken).filter(models.RefreshToken.token==request_body.refresh_token).first()
+def refresh_token(request_body: RefreshTokenRequest, db: Session = Depends(get_db)):
+    refresh = db.query(models.RefreshToken).filter(models.RefreshToken.token == request_body.refresh_token).first()
     if not refresh:
         raise HTTPException(status_code=401, detail="No refresh token")
     if refresh.is_revoked:
@@ -113,4 +113,3 @@ def refresh_token(request_body: RefreshTokenRequest, db:Session=Depends(get_db))
     email = payload.get("sub")
     new_token = create_access_token(data={"sub": email})
     return {"access_token": new_token, "token_type": "bearer"}
-

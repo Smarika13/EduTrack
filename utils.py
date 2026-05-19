@@ -67,9 +67,9 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(http_be
         return user, "admin"
     raise credentials_exception
 
+
 def create_refresh_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
