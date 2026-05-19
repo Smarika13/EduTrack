@@ -1,0 +1,7 @@
+fastapi==0.136.1
+pydantic==2.13.4
+python-dotenv==1.2.2
+python_bcrypt==0.3.2
+python_jose==3.5.0
+slowapi==0.1.9
+SQLAlchemy==2.0.49
