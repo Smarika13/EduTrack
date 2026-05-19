@@ -112,4 +112,6 @@ def refresh_token(request_body: RefreshTokenRequest, db: Session = Depends(get_d
     payload = jwt.decode(request_body.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
     email = payload.get("sub")
     new_token = create_access_token(data={"sub": email})
+    refresh.is_revoked = True
+    db.commit()
     return {"access_token": new_token, "token_type": "bearer"}
