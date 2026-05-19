@@ -1,5 +1,6 @@
-from pydantic import field_validator,BaseModel
+from pydantic import field_validator, BaseModel
 from schemas.base import BaseUserSchema
+
 
 class TeacherSchema(BaseUserSchema):
     department: str
@@ -16,6 +17,7 @@ class TeacherSchema(BaseUserSchema):
         if len(v.strip()) == 0:
             raise ValueError('Department cannot be empty')
         return v.strip()
+
 
 class TeacherResponse(BaseModel):
     id: int

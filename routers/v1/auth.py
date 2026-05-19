@@ -1,15 +1,16 @@
-from fastapi import APIRouter,HTTPException,Depends
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from dependencies import get_db
 import models
-from schemas.student import StudentSchema,StudentResponse
+from schemas.student import StudentSchema, StudentResponse
 from schemas.auth import LoginSchema, TokenResponse
-from utils import hash_password,verify_password,create_access_token
+from utils import hash_password, verify_password, create_access_token
 from limiter import limiter
 from fastapi import Request
 from logger import logger
 
 router = APIRouter()
+
 
 @router.post("/register", response_model=StudentResponse)
 @limiter.limit("5/minute")
@@ -18,9 +19,7 @@ def register(request: Request, student: StudentSchema, db: Session = Depends(get
     if existing_email:
         logger.warning(f"Email already registered: {student.email}")
         raise HTTPException(status_code=400, detail="Email already registered")
-     
-    
-    
+
     existing_roll = db.query(models.Student).filter(models.Student.roll_no == student.roll_no).first()
     if existing_roll:
         logger.warning(f"Roll number already registered {student.email}")
@@ -70,6 +69,6 @@ def login(request: Request, credentials: LoginSchema, db: Session = Depends(get_
         token = create_access_token(data={"sub": user.email})
         logger.info(f"You are logged in as {user.email}")
         return {"access_token": token, "token_type": "bearer"}
-    
+
     logger.warning(f"Invalid credentials {credentials.email}")
     raise HTTPException(status_code=401, detail="Invalid credentials")

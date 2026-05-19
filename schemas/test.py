@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator, model_validator
 from datetime import datetime
 
+
 class TestSchema(BaseModel):
     name: str
     full_mark: int
@@ -37,6 +38,7 @@ class TestSchema(BaseModel):
         if self.pass_mark > self.full_mark:
             raise ValueError('Pass mark cannot exceed full mark')
         return self
+
 
 class TestResponse(BaseModel):
     id: int

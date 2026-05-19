@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator
 from datetime import datetime
 
+
 class AssignmentSchema(BaseModel):
     title: str
     description: str
@@ -24,6 +25,7 @@ class AssignmentSchema(BaseModel):
         if v < datetime.utcnow():
             raise ValueError('Deadline must be in the future')
         return v
+
 
 class AssignmentResponse(BaseModel):
     id: int

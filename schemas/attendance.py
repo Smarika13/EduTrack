@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator
 from datetime import datetime
 
+
 class AttendanceSchema(BaseModel):
     date: datetime
     status: str
@@ -13,6 +14,7 @@ class AttendanceSchema(BaseModel):
         if v.lower() not in allowed:
             raise ValueError(f'Status must be one of {allowed}')
         return v.lower()
+
 
 class AttendanceResponse(BaseModel):
     id: int

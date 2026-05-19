@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, field_validator
 
+
 class BaseUserSchema(BaseModel):
     name: str
     email: EmailStr
