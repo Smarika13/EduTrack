@@ -39,19 +39,17 @@ def get_my_profile(current_user=Depends(require_student)):
 
 
 @router.get("/student/me/attendance", response_model=PaginatedResponse[AttendanceResponse])
-async def get_my_attendance(current_user=Depends(require_student), db: Session = Depends(get_db), pg=Depends(pagination),cache=Depends(get_redis)):
-    cache_key=(f"attendance:{current_user.id}")
-    cached_data=await cache.get(cache_key)
+async def get_my_attendance(current_user=Depends(require_student), db: Session = Depends(get_db), pg=Depends(pagination), cache=Depends(get_redis)):
+    cache_key = (f"attendance:{current_user.id}")
+    cached_data = await cache.get(cache_key)
     if cached_data:
         logger.info(f"Student {current_user.email} fetched attendance and cache hit")
         return json.loads(cached_data)
     else:
-        data=paginate(db.query(models.Attendance).filter(models.Attendance.student_id == current_user.id), *pg)
-        await cache.set(cache_key,json.dumps(data),ex=86400) 
-        logger.info(f"Student {current_user.email} fetched attendance and cache miss")   
+        data = paginate(db.query(models.Attendance).filter(models.Attendance.student_id == current_user.id), *pg)
+        await cache.set(cache_key, json.dumps(data), ex=86400)
+        logger.info(f"Student {current_user.email} fetched attendance and cache miss")
         return data
-    
-    
 
 
 @router.get("/student/me/scores", response_model=PaginatedResponse[ScoreResponse])
@@ -64,6 +62,3 @@ def get_my_scores(current_user=Depends(require_student), db: Session = Depends(g
 def get_my_submissions(current_user=Depends(require_student), db: Session = Depends(get_db), pg=Depends(pagination)):
     logger.info(f"Student {current_user.email} fetched submissions")
     return paginate(db.query(models.Submission).filter(models.Submission.student_id == current_user.id), *pg)
-
-
-
