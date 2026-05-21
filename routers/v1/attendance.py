@@ -5,12 +5,15 @@ from utils import get_current_user
 from schemas.attendance import AttendanceSchema, AttendanceResponse
 import models
 from logger import logger
+from caching import get_redis
 
 router = APIRouter()
 
 
 @router.post("/attendance", response_model=AttendanceResponse)
-def mark_attendance(attendance: AttendanceSchema, current_user_data: tuple = Depends(get_current_user), db: Session = Depends(get_db)):
+async def mark_attendance(attendance: AttendanceSchema, current_user_data: tuple = Depends(get_current_user),
+                          db: Session = Depends(get_db), cache=Depends(get_redis)):
+
     current_user, role = current_user_data
     if role != "teacher":
         logger.warning(f"{current_user.email} has unauthorized access for marking")
@@ -54,5 +57,8 @@ def mark_attendance(attendance: AttendanceSchema, current_user_data: tuple = Dep
     db.add(db_attendance)
     db.commit()
     db.refresh(db_attendance)
+    cache_key = (f"attendance:{attendance.student_id}")
+    await cache.delete(cache_key)
+    logger.info(f"{current_user.email} has successfully deleted {cache_key}")
     logger.info(f"{current_user.email} has successfully marked {attendance.student_id} from {subject.faculty}")
     return db_attendance
