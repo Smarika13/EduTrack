@@ -73,3 +73,12 @@ def create_refresh_token(data: dict) -> str:
     expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def paginate(query, page: int, limit: int):
+    return {
+        "total": query.count(),
+        "page": page,
+        "limit": limit,
+        "data": query.offset((page - 1) * limit).limit(limit).all()
+    }

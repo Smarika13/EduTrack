@@ -6,12 +6,10 @@ from schemas.student import StudentResponse
 from schemas.attendance import AttendanceResponse
 from schemas.score import ScoreResponse
 from schemas.submission import SubmissionResponse
-from typing import Dict, Any
-import models
 from logger import logger
 from schemas.pagination import PaginatedResponse
 from caching import get_redis
-import json
+import services.student_service as student_service
 
 router = APIRouter()
 
@@ -28,10 +26,6 @@ def pagination(page: int = Query(1, ge=1), limit: int = Query(20, ge=1, le=100))
     return page, limit
 
 
-def paginate(query, page: int, limit: int) -> Dict[str, Any]:
-    return {"total": query.count(), "page": page, "limit": limit, "data": query.offset((page - 1) * limit).limit(limit).all()}
-
-
 @router.get("/student/me", response_model=StudentResponse)
 def get_my_profile(current_user=Depends(require_student)):
     logger.info(f"Student {current_user.email} fetched their profile")
@@ -40,25 +34,14 @@ def get_my_profile(current_user=Depends(require_student)):
 
 @router.get("/student/me/attendance", response_model=PaginatedResponse[AttendanceResponse])
 async def get_my_attendance(current_user=Depends(require_student), db: Session = Depends(get_db), pg=Depends(pagination), cache=Depends(get_redis)):
-    cache_key = (f"attendance:{current_user.id}")
-    cached_data = await cache.get(cache_key)
-    if cached_data:
-        logger.info(f"Student {current_user.email} fetched attendance and cache hit")
-        return json.loads(cached_data)
-    else:
-        data = paginate(db.query(models.Attendance).filter(models.Attendance.student_id == current_user.id), *pg)
-        await cache.set(cache_key, json.dumps(data), ex=86400)
-        logger.info(f"Student {current_user.email} fetched attendance and cache miss")
-        return data
+    return await student_service.get_my_attendance(current_user, db, pg, cache)
 
 
 @router.get("/student/me/scores", response_model=PaginatedResponse[ScoreResponse])
 def get_my_scores(current_user=Depends(require_student), db: Session = Depends(get_db), pg=Depends(pagination)):
-    logger.info(f"Student {current_user.email} fetched scores")
-    return paginate(db.query(models.Score).filter(models.Score.student_id == current_user.id), *pg)
+    return student_service.get_my_scores(current_user, db, pg)
 
 
 @router.get("/student/me/submissions", response_model=PaginatedResponse[SubmissionResponse])
 def get_my_submissions(current_user=Depends(require_student), db: Session = Depends(get_db), pg=Depends(pagination)):
-    logger.info(f"Student {current_user.email} fetched submissions")
-    return paginate(db.query(models.Submission).filter(models.Submission.student_id == current_user.id), *pg)
+    return student_service.get_my_submissions(current_user, db, pg)
