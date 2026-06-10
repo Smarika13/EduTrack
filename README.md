@@ -1,8 +1,8 @@
 # EduTrack — Education Management REST API
 
-A production-structured backend REST API for managing education workflows across three roles: **Student**, **Teacher**, and **Admin**.
+A production-structured backend REST API for managing school workflows across three roles: **Student**, **Teacher**, and **Admin**. Built with real architectural decisions — service layer separation, Redis cache-aside pattern with active invalidation, refresh token rotation, rate limiting, and a CI/CD pipeline with branch protection.
 
-Built with **Python + FastAPI**, following real-world backend architecture patterns including service layer separation, Redis caching, JWT authentication, and CI/CD.
+Built with **Python + FastAPI**, following real-world backend architecture patterns.
 
 ---
 
@@ -20,12 +20,12 @@ Built with **Python + FastAPI**, following real-world backend architecture patte
 |---------|-------------|
 | Student | Register, Login, View profile, View attendance, View test scores, Submit assignments |
 | Teacher | Login, View profile, Mark attendance, Enter test scores, Create assignments, Create tests |
-| Admin   | Create teacher accounts |
+| Admin   | Create teacher accounts, Create subjects |
 
 ### Backend Architecture
-- **Service layer** — business logic separated from HTTP routing
+- **Service layer** — business logic separated from HTTP routing; reusable across endpoints
 - **Pagination** — all list endpoints return `total`, `page`, `limit`, `data`
-- **Redis caching** — cache-aside pattern with active cache invalidation
+- **Redis caching** — cache-aside pattern with active cache invalidation on writes
 - **File uploads/downloads** — PDF assignment submissions stored on disk
 - **Structured logging** — file + console handlers with severity levels
 - **Global error handling** — consistent JSON error responses across all endpoints
@@ -34,7 +34,7 @@ Built with **Python + FastAPI**, following real-world backend architecture patte
 
 ### DevOps
 - **GitHub Actions CI** — runs `flake8` linting on every push and PR
-- **Branch protection** — PRs required, CI must pass before merge
+- **Branch protection** — direct pushes to `main` are blocked; PRs required with CI passing before merge
 - **API versioning** — all endpoints under `/api/v1/`
 
 ---
@@ -116,19 +116,19 @@ GET    /api/v1/student/me/submissions    — Get own submissions (paginated)
 
 ### Teacher
 ```
-GET    /api/v1/teacher/me                            — Get own profile
-POST   /api/v1/attendance                            — Mark student attendance
-POST   /api/v1/score                                 — Enter test score
-POST   /api/v1/assignment                            — Create assignment
-POST   /api/v1/test                                  — Create test
+GET    /api/v1/teacher/me                — Get own profile
+POST   /api/v1/attendance                — Mark student attendance
+POST   /api/v1/score                     — Enter test score
+POST   /api/v1/assignment                — Create assignment
+POST   /api/v1/test                      — Create test
 ```
 
 ### Submission
 ```
-POST   /api/v1/submission                                      — Submit assignment (PDF)
-PUT    /api/v1/submission/assignment/{id}                      — Update submission
-DELETE /api/v1/submission/assignment/{id}                      — Delete submission
-GET    /api/v1/submission/assignment/{id}/download             — Download submission
+POST   /api/v1/submission                            — Submit assignment (PDF)
+PUT    /api/v1/submission/assignment/{id}             — Update submission
+DELETE /api/v1/submission/assignment/{id}             — Delete submission
+GET    /api/v1/submission/assignment/{id}/download    — Download submission
 ```
 
 ### Admin
@@ -198,7 +198,7 @@ Interactive docs: `http://127.0.0.1:8000/docs`
 Routers handle only HTTP concerns (auth checks, request/response). All business logic, DB operations, and cache management live in the service layer. This means business rules can be reused across multiple endpoints without duplication.
 
 **Why Redis caching?**
-Student attendance is read far more often than it is written. Cache-aside pattern stores responses in Redis with a 24-hour TTL. Cache is actively deleted (not updated) on write operations because the exact pagination parameters of the cached response are unknown.
+Student attendance is read far more often than it is written. Cache-aside pattern stores responses in Redis with a 24-hour TTL. Cache is actively deleted (not updated) on write operations because the exact pagination parameters of the cached response are unknown — updating would require knowing which cached pages exist.
 
 **Why refresh tokens?**
 Access tokens are stateless — they cannot be invalidated before expiry. Keeping them short-lived (30 min) limits the damage window if stolen. Refresh tokens are stored in the database and can be immediately revoked on logout.
@@ -216,7 +216,7 @@ Every push and pull request triggers the CI pipeline:
 - Run flake8 linting
 ```
 
-Branch protection rules require CI to pass before any PR can be merged to `main`.
+**Branch protection is enforced** — direct pushes to `main` are blocked. All changes must go through a pull request, and CI must pass before merging. This ensures no broken or unformatted code reaches the main branch.
 
 ---
 
